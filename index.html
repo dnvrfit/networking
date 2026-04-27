@@ -224,8 +224,11 @@
     border: 1px solid var(--border-dark);
     padding: 3px 8px;
     border-radius: 2px;
-    white-space: nowrap;
+    white-space: normal;
     flex-shrink: 0;
+    max-width: 120px;
+    text-align: right;
+    line-height: 1.4;
     margin-top: 2px;
   }
   .card-business {
@@ -256,8 +259,9 @@
   }
   .card-links {
     display: flex;
-    gap: 16px;
+    gap: 12px 16px;
     flex-wrap: wrap;
+    align-items: center;
     padding-top: 12px;
     border-top: 1px solid var(--border);
   }
@@ -271,6 +275,21 @@
     transition: color 0.12s;
   }
   .card-link:hover { color: var(--black); }
+  .card-emails {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    margin-top: 4px;
+  }
+  .card-email {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--light);
+    display: flex;
+    align-items: center;
+  }
 
   /* FOOTER */
   .footer {
@@ -389,6 +408,7 @@ function renderCards(participants) {
   grid.innerHTML = '';
 
   const arrowSvg = `<svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0"><line x1="1" y1="8" x2="8" y2="1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><polyline points="3,1 8,1 8,6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const igSvg = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0"><rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.8"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>`;
   const mailSvg = `<svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0"><rect x="0.6" y="0.6" width="8.8" height="6.8" rx="1" stroke="currentColor" stroke-width="1.1"/><polyline points="0.6,0.6 5,4.5 9.4,0.6" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>`;
 
   participants.forEach(p => {
@@ -397,22 +417,35 @@ function renderCards(participants) {
     card.dataset.business = (p.business || '').toLowerCase();
     card.dataset.person = (p.person || '').toLowerCase();
 
+    // Stack multiple names (split on semicolon)
+    const names = (p.person || '').split(';').map(n => n.trim()).filter(Boolean);
+    const namesHtml = names.map(n => `<div class="card-person">${n}</div>`).join('');
+
+    // Links row: website + IG handles
     const links = [];
     if (p.website && p.website !== 'N/A') links.push(`<a href="${p.website}" target="_blank" class="card-link">${arrowSvg}Website</a>`);
-    if (p.ig) links.push(`<a href="https://instagram.com/${p.ig.replace('@','')}" target="_blank" class="card-link">${arrowSvg}${p.ig}</a>`);
-    if (p.email) links.push(`<a href="mailto:${p.email}" class="card-link">${mailSvg}Email</a>`);
+    const igHandles = (p.ig || '').split(';').map(h => h.trim()).filter(Boolean);
+    igHandles.forEach(handle => {
+      links.push(`<a href="https://instagram.com/${handle.replace('@','')}" target="_blank" class="card-link">${igSvg}${handle}</a>`);
+    });
+
+    // Emails: listed plainly, stacked, not a link
+    const emails = (p.email || '').split(';').map(e => e.trim()).filter(Boolean);
+    const emailsHtml = emails.length
+      ? `<div class="card-emails">${emails.map(e => `<span class="card-email">${mailSvg}${e}</span>`).join('')}</div>`
+      : '';
 
     card.innerHTML = `
       <div class="card-top">
         <div>
           <div class="card-business">${p.business}</div>
-          <div class="card-person">${p.person}</div>
+          ${namesHtml}
         </div>
         <span class="card-tag">${p.category}</span>
       </div>
       <div class="card-rule"></div>
       <p class="card-description">${p.description}</p>
-      ${links.length ? `<div class="card-links">${links.join('')}</div>` : ''}
+      ${links.length || emailsHtml ? `<div class="card-links">${links.join('')}${emailsHtml}</div>` : ''}
     `;
     grid.appendChild(card);
   });
