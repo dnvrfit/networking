@@ -355,6 +355,83 @@
 </footer>
 
 <script>
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQff40HohdWQ1yExooi31orv5yzSJsn1Hsy1VaPdyHvJ-JwE7UiV3qKFKa9jQZbxQBxn4-0q0l7yuCd/pub?gid=1206357728&single=true&output=csv';
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase());
+  return lines.slice(1).map(line => {
+    const cols = [];
+    let cur = '', inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQuote = !inQuote; }
+      else if (ch === ',' && !inQuote) { cols.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+    cols.push(cur);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (cols[i] || '').trim().replace(/^"|"$/g, ''));
+    return obj;
+  }).filter(p => p.business);
+}
+
+function renderCards(participants) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  const arrowSvg = `<svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0"><line x1="1" y1="8" x2="8" y2="1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><polyline points="3,1 8,1 8,6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const mailSvg = `<svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0"><rect x="0.6" y="0.6" width="8.8" height="6.8" rx="1" stroke="currentColor" stroke-width="1.1"/><polyline points="0.6,0.6 5,4.5 9.4,0.6" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>`;
+
+  participants.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.business = (p.business || '').toLowerCase();
+    card.dataset.person = (p.person || '').toLowerCase();
+
+    const links = [];
+    if (p.website && p.website !== 'N/A') links.push(`<a href="${p.website}" target="_blank" class="card-link">${arrowSvg}Website</a>`);
+    if (p.ig) links.push(`<a href="https://instagram.com/${p.ig.replace('@','')}" target="_blank" class="card-link">${arrowSvg}${p.ig}</a>`);
+    if (p.email) links.push(`<a href="mailto:${p.email}" class="card-link">${mailSvg}Email</a>`);
+
+    card.innerHTML = `
+      <div class="card-top">
+        <div>
+          <div class="card-business">${p.business}</div>
+          <div class="card-person">${p.person}</div>
+        </div>
+        <span class="card-tag">${p.category}</span>
+      </div>
+      <div class="card-rule"></div>
+      <p class="card-description">${p.description}</p>
+      ${links.length ? `<div class="card-links">${links.join('')}</div>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('count').textContent = participants.length + ' Participants';
+
+  document.getElementById('search').addEventListener('input', function() {
+    const q = this.value.toLowerCase().trim();
+    let visible = 0;
+    document.querySelectorAll('.card').forEach(c => {
+      const match = !q || c.dataset.business.includes(q) || c.dataset.person.includes(q);
+      c.classList.toggle('hidden', !match);
+      if (match) visible++;
+    });
+    document.getElementById('count').textContent = visible + ' Participant' + (visible !== 1 ? 's' : '');
+  });
+}
+
+// Load from Google Sheets
+fetch(SHEET_CSV_URL)
+  .then(r => r.text())
+  .then(text => renderCards(parseCSV(text)))
+  .catch(() => {
+    document.getElementById('grid').innerHTML = '<p style="padding:40px;color:#999;font-size:13px;">Unable to load participants. Please try refreshing.</p>';
+  });
+
+// placeholder so nothing below breaks
 const participants = [
   {
     business: "Pearl Street Fitness",
@@ -555,50 +632,6 @@ const participants = [
     email: "brian@bskstrategies.co"
   }
 ];
-
-// Render cards
-const grid = document.getElementById('grid');
-participants.forEach(p => {
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.dataset.business = p.business.toLowerCase();
-  card.dataset.person = p.person.toLowerCase();
-
-  const arrowSvg = `<svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0"><line x1="1" y1="8" x2="8" y2="1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><polyline points="3,1 8,1 8,6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const mailSvg = `<svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0"><rect x="0.6" y="0.6" width="8.8" height="6.8" rx="1" stroke="currentColor" stroke-width="1.1"/><polyline points="0.6,0.6 5,4.5 9.4,0.6" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>`;
-
-  const links = [];
-  if (p.website && p.website !== 'N/A') links.push(`<a href="${p.website}" target="_blank" class="card-link">${arrowSvg}Website</a>`);
-  if (p.ig) links.push(`<a href="https://instagram.com/${p.ig.replace('@','')}" target="_blank" class="card-link">${arrowSvg}${p.ig}</a>`);
-  if (p.email) links.push(`<a href="mailto:${p.email}" class="card-link">${mailSvg}Email</a>`);
-
-  card.innerHTML = `
-    <div class="card-top">
-      <div>
-        <div class="card-business">${p.business}</div>
-        <div class="card-person">${p.person}</div>
-      </div>
-      <span class="card-tag">${p.category}</span>
-    </div>
-    <div class="card-rule"></div>
-    <p class="card-description">${p.description}</p>
-    ${links.length ? `<div class="card-links">${links.join('')}</div>` : ''}
-  `;
-  grid.appendChild(card);
-});
-
-document.getElementById('count').textContent = participants.length + ' Participants';
-
-document.getElementById('search').addEventListener('input', function() {
-  const q = this.value.toLowerCase().trim();
-  let visible = 0;
-  document.querySelectorAll('.card').forEach(c => {
-    const match = !q || c.dataset.business.includes(q) || c.dataset.person.includes(q);
-    c.classList.toggle('hidden', !match);
-    if (match) visible++;
-  });
-  document.getElementById('count').textContent = visible + ' Participant' + (visible !== 1 ? 's' : '');
-});
 </script>
 </body>
 </html>
