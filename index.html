@@ -86,12 +86,13 @@
   }
   .hero-title {
     font-family: 'Libre Baskerville', serif;
-    font-size: clamp(40px, 7vw, 80px);
+    font-size: clamp(22px, 5.5vw, 80px);
     font-weight: 700;
     line-height: 1.0;
     color: var(--black);
     margin-bottom: 0;
     letter-spacing: -0.02em;
+    white-space: nowrap;
   }
   .hero-event-meta {
     display: flex;
@@ -605,10 +606,13 @@ participants.forEach(p => {
   card.dataset.business = p.business.toLowerCase();
   card.dataset.person = p.person.toLowerCase();
 
+  const arrowSvg = `<svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0"><line x1="1" y1="8" x2="8" y2="1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><polyline points="3,1 8,1 8,6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const mailSvg = `<svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;margin-right:4px;flex-shrink:0"><rect x="0.6" y="0.6" width="8.8" height="6.8" rx="1" stroke="currentColor" stroke-width="1.1"/><polyline points="0.6,0.6 5,4.5 9.4,0.6" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>`;
+
   const links = [];
-  if (p.website && p.website !== 'N/A') links.push(`<a href="${p.website}" target="_blank" class="card-link">&#x2197; Website</a>`);
-  if (p.ig) links.push(`<a href="https://instagram.com/${p.ig.replace('@','')}" target="_blank" class="card-link">&#x2197; ${p.ig}</a>`);
-  if (p.email) links.push(`<a href="mailto:${p.email}" class="card-link">&#x2709; Email</a>`);
+  if (p.website && p.website !== 'N/A') links.push(`<a href="${p.website}" target="_blank" class="card-link">${arrowSvg}Website</a>`);
+  if (p.ig) links.push(`<a href="https://instagram.com/${p.ig.replace('@','')}" target="_blank" class="card-link">${arrowSvg}${p.ig}</a>`);
+  if (p.email) links.push(`<a href="mailto:${p.email}" class="card-link">${mailSvg}Email</a>`);
 
   card.innerHTML = `
     <div class="card-top">
