@@ -372,7 +372,15 @@ function parseCSV(text) {
     cols.push(cur);
     const obj = {};
     headers.forEach((h, i) => obj[h] = (cols[i] || '').trim().replace(/^"|"$/g, ''));
-    return obj;
+    return {
+      business: obj['business name'] || '',
+      person: obj['attendee(s)'] || '',
+      category: obj['category'] || '',
+      description: obj['1-2 sentence description'] || '',
+      website: obj['website'] || '',
+      ig: obj['ig'] || '',
+      email: obj['primary email'] || ''
+    };
   }).filter(p => p.business);
 }
 
