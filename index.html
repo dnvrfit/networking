@@ -64,6 +64,17 @@
     transition: color 0.12s;
   }
   .nav-right:hover { color: var(--black); }
+  @media (max-width: 620px) {
+    .nav {
+      position: static;
+      height: auto;
+      padding: 16px 20px;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      text-align: center;
+    }
+  }
 
   /* HERO */
   .hero-wrap {
@@ -342,8 +353,6 @@
   .hidden { display: none !important; }
 
   @media (max-width: 620px) {
-    .nav { padding: 0 20px; }
-    .nav-right { display: none; }
     .hero { padding: 48px 20px 40px; }
     .section { padding: 36px 20px 60px; }
     .footer { padding: 28px 20px; }
