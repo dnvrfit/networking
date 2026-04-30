@@ -328,9 +328,75 @@
 
   .hidden { display: none !important; }
 
+  /* TWO-COLUMN HERO */
+  .hero-columns {
+    display: flex;
+    gap: 64px;
+    text-align: left;
+    align-items: flex-start;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .hero-col { flex: 1; }
+  .hero-col .hero-subtitle {
+    margin-top: 0;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+  .hero-col .hero-body {
+    margin: 0;
+    text-align: left;
+    max-width: none;
+    font-weight: 400;
+    color: var(--mid);
+  }
+  .hero-sched-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .hero-sched-row + .hero-sched-row { margin-top: 14px; }
+  .hero-sched-time {
+    flex-shrink: 0;
+    width: 104px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dark);
+    padding-top: 2px;
+    line-height: 1.6;
+  }
+  .hero-sched-title {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--dark);
+    line-height: 1.65;
+  }
+  .hero-sched-optional {
+    font-size: 8px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--light);
+    margin-top: 5px;
+    text-align: center;
+  }
+  .hero-sched-title em { font-style: italic; color: var(--mid); }
+  .hero-sched-sub {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--mid);
+    margin-top: 4px;
+    line-height: 1.65;
+  }
+
   @media (max-width: 620px) {
     .hero { padding: 48px 20px 40px; }
     .hero-title { font-size: clamp(18px, 6.2vw, 28px); }
+    .hero-columns { flex-direction: column; gap: 28px; }
+    .hero-col .hero-subtitle { text-align: center; }
+    .hero-col .hero-body { text-align: center; }
     .section { padding: 36px 20px 60px; }
     .footer { padding: 28px 20px; }
     .grid { grid-template-columns: 1fr; }
@@ -352,8 +418,31 @@
         <a href="https://maps.app.goo.gl/k1mkmG9aLz9C9dUZA" target="_blank" class="hero-meta-value">Pearl Street Fitness</a>
       </div>
     </div>
-    <p class="hero-subtitle">Meet the Room</p>
-    <p class="hero-body">Today you're surrounded by the best of the best in the Denver health &amp; wellness scene — owners, operators, visionaries, and leaders that are driving the future of our local, vibrant ecosystem.</p>
+    <div class="hero-columns">
+      <div class="hero-col">
+        <p class="hero-subtitle">Meet the Room</p>
+        <p class="hero-body">Today you're surrounded by the best of the best in the Denver health &amp; wellness scene — owners, operators, visionaries, and leaders that are driving the future of our local, vibrant ecosystem.</p>
+      </div>
+      <div class="hero-col">
+        <p class="hero-subtitle">Schedule</p>
+        <div class="hero-sched-row">
+          <div class="hero-sched-time">12:00 – 12:45 PM<div class="hero-sched-optional">Optional</div></div>
+          <div>
+            <div class="hero-sched-title">HIIT Workout <em>led by Kerry Audie</em></div>
+            <div class="hero-sched-sub">Owner, Pearl Street Fitness</div>
+          </div>
+        </div>
+        <div class="hero-sched-row">
+          <div class="hero-sched-time">12:45 – 2:30 PM</div>
+          <div>
+            <div class="hero-sched-title">Networking</div>
+            <div class="hero-sched-sub">20–30 min intros</div>
+            <div class="hero-sched-sub">Open networking</div>
+            <div class="hero-sched-sub">Catered lunch from Illegal Pete's</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -361,7 +450,8 @@
   <div class="section-header">
     <span class="section-title">Who's Here</span>
     <div style="display:flex;align-items:center;gap:12px;">
-      <span class="section-count" id="count"></span>
+      <span class="section-count" id="biz-count"></span>
+      <span class="section-count" id="person-count"></span>
       <input type="text" class="search-input" id="search" placeholder="Search by name or business…">
     </div>
   </div>
@@ -423,6 +513,7 @@ function renderCards(participants) {
 
     // Stack multiple names (split on semicolon)
     const names = (p.person || '').split(';').map(n => n.trim()).filter(Boolean);
+    card.dataset.personCount = names.length;
     const namesHtml = names.map(n => `<div class="card-person">${n}</div>`).join('');
 
     // Links row: website + IG handles
@@ -454,17 +545,23 @@ function renderCards(participants) {
     grid.appendChild(card);
   });
 
-  document.getElementById('count').textContent = participants.length + ' Participants';
+  const totalPeople = participants.reduce((sum, p) => sum + (p.person || '').split(';').map(n => n.trim()).filter(Boolean).length, 0);
+  document.getElementById('biz-count').textContent = participants.length + ' ' + (participants.length !== 1 ? 'Businesses' : 'Business');
+  document.getElementById('person-count').textContent = totalPeople + ' ' + (totalPeople !== 1 ? 'Participants' : 'Participant');
 
   document.getElementById('search').addEventListener('input', function() {
     const q = this.value.toLowerCase().trim();
-    let visible = 0;
+    let visibleBiz = 0, visiblePeople = 0;
     document.querySelectorAll('.card').forEach(c => {
       const match = !q || c.dataset.business.includes(q) || c.dataset.person.includes(q);
       c.classList.toggle('hidden', !match);
-      if (match) visible++;
+      if (match) {
+        visibleBiz++;
+        visiblePeople += parseInt(c.dataset.personCount || 0);
+      }
     });
-    document.getElementById('count').textContent = visible + ' Participant' + (visible !== 1 ? 's' : '');
+    document.getElementById('biz-count').textContent = visibleBiz + ' ' + (visibleBiz !== 1 ? 'Businesses' : 'Business');
+    document.getElementById('person-count').textContent = visiblePeople + ' ' + (visiblePeople !== 1 ? 'Participants' : 'Participant');
   });
 }
 
